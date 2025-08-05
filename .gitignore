@@ -185,6 +185,8 @@ cython_debug/
 chroma_db/
 vector_store/
 embeddings/
+docs/chroma.sqlite3
+docs/chroma.sqlite3-*
 
 # API keys and secrets
 .env.local

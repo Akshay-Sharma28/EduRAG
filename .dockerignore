@@ -1,0 +1,15 @@
+.env
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.coverage
+.venv
+venv/
+env/
+.DS_Store
+*.log
+docs/chroma.sqlite3

@@ -2,6 +2,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import PyPDFLoader
 from pathlib import Path
 from .vectorstore import create_vectorstore
+from .config import CHUNK_SIZE, CHUNK_OVERLAP
 import sys
 
 PDF_DIR = Path("./data")
@@ -24,8 +25,8 @@ def ingest_pdfs():
         sys.exit(1)
 
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=200
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=CHUNK_OVERLAP
     )
     split_docs = text_splitter.split_documents(docs)
     print(f"✅ Split into {len(split_docs)} chunk(s)")

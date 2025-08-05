@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block title %}Upload PDFs - EduRAG{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="main-container">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="container">
+                <h1 class="hero-title">
+                    <i class="fas fa-upload me-3"></i>Upload PDFs
+                </h1>
+                <p class="hero-subtitle">
+                    Add your NCERT textbooks and educational content
+                </p>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="container py-5">
+            <div class="row">
+                <!-- Upload Section -->
+                <div class="col-lg-8">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h5 class="mb-0">
+                                <i class="fas fa-file-pdf me-2"></i>Upload PDF Files
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="upload-area" id="upload-area">
+                                <div class="text-center py-5">
+                                    <i class="fas fa-cloud-upload-alt fa-5x text-muted mb-3"></i>
+                                    <h4>Drag & Drop PDF files here</h4>
+                                    <p class="text-muted">or click to browse files</p>
+                                    <input type="file" id="file-input" class="d-none" accept=".pdf" multiple>
+                                    <button class="btn btn-primary mt-3" onclick="$('#file-input').click()">
+                                        <i class="fas fa-folder-open me-2"></i>Browse Files
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Upload Progress -->
+                            <div id="upload-progress" class="mt-4 d-none">
+                                <div class="progress mb-2">
+                                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                </div>
+                                <small class="text-muted">Uploading files...</small>
+                            </div>
+
+                            <!-- Upload Results -->
+                            <div id="upload-results" class="mt-4"></div>
+                        </div>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div class="card border-0 shadow-sm mt-4">
+                        <div class="card-header bg-white border-0">
+                            <h6 class="mb-0">Upload Instructions</h6>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    Only PDF files are supported
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    Maximum file size: 16MB per file
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    You can upload multiple files at once
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-info-circle text-info me-2"></i>
+                                    After uploading, the system will automatically process the files
+                                </li>
+                                <li class="mb-2">
+                                    <i class="fas fa-info-circle text-info me-2"></i>
+                                    Processing may take a few minutes for large files
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sidebar -->
+                <div class="col-lg-4">
+                    <!-- Current Files -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">Current PDF Files</h6>
+                            <button class="btn btn-sm btn-outline-primary" onclick="refreshFileList()">
+                                <i class="fas fa-sync"></i>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div id="file-list">
+                                <div class="text-center py-3">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2 mb-0">Loading files...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- System Status -->
+                    <div class="stats-card">
+                        <div class="stats-number">{{ status.pdf_count }}</div>
+                        <div class="stats-label">Total PDF Files</div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0">
+                            <h6 class="mb-0">Actions</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-grid gap-2">
+                                <a href="/" class="btn btn-primary">
+                                    <i class="fas fa-home me-1"></i>Back to Chat
+                                </a>
+                                <button class="btn btn-outline-warning" onclick="reinitializeSystem()">
+                                    <i class="fas fa-redo me-1"></i>Reprocess All Files
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.upload-area {
+    border: 2px dashed #cbd5e0;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-area:hover {
+    border-color: var(--primary-color);
+    background-color: #f8fafc;
+}
+
+.upload-area.dragover {
+    border-color: var(--primary-color);
+    background-color: rgba(79, 70, 229, 0.1);
+}
+
+.file-item {
+    display: flex;
+    justify-content-between;
+    align-items: center;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: #f8fafc;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+}
+
+.file-info {
+    flex: 1;
+}
+
+.file-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.file-details {
+    font-size: 0.8rem;
+    color: #6b7280;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+$(document).ready(function() {
+    // Load file list on page load
+    refreshFileList();
+    
+    // Handle file input change
+    $('#file-input').on('change', function() {
+        handleFiles(this.files);
+    });
+    
+    // Handle drag and drop
+    const uploadArea = $('#upload-area');
+    
+    uploadArea.on('dragover', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).addClass('dragover');
+    });
+    
+    uploadArea.on('dragleave', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('dragover');
+    });
+    
+    uploadArea.on('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('dragover');
+        
+        const files = e.originalEvent.dataTransfer.files;
+        handleFiles(files);
+    });
+    
+    // Handle click on upload area
+    uploadArea.on('click', function() {
+        $('#file-input').click();
+    });
+});
+
+function handleFiles(files) {
+    if (files.length === 0) return;
+    
+    // Validate files
+    const validFiles = [];
+    const errors = [];
+    
+    Array.from(files).forEach(file => {
+        if (file.type !== 'application/pdf') {
+            errors.push(`${file.name}: Only PDF files are supported`);
+        } else if (file.size > 16 * 1024 * 1024) {
+            errors.push(`${file.name}: File size exceeds 16MB limit`);
+        } else {
+            validFiles.push(file);
+        }
+    });
+    
+    // Show errors if any
+    if (errors.length > 0) {
+        showUploadResults(errors.map(error => ({
+            success: false,
+            message: error
+        })));
+    }
+    
+    // Upload valid files
+    if (validFiles.length > 0) {
+        uploadFiles(validFiles);
+    }
+}
+
+function uploadFiles(files) {
+    const totalFiles = files.length;
+    let completedFiles = 0;
+    const results = [];
+    
+    // Show progress
+    $('#upload-progress').removeClass('d-none');
+    updateProgress(0);
+    
+    // Upload files one by one
+    files.forEach((file, index) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        $.ajax({
+            url: '/upload',
+            type: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(response) {
+                results.push({
+                    success: true,
+                    message: response.message || `${file.name} uploaded successfully`
+                });
+            },
+            error: function(xhr) {
+                const error = xhr.responseJSON ? xhr.responseJSON.error : 'Upload failed';
+                results.push({
+                    success: false,
+                    message: `${file.name}: ${error}`
+                });
+            },
+            complete: function() {
+                completedFiles++;
+                updateProgress((completedFiles / totalFiles) * 100);
+                
+                if (completedFiles === totalFiles) {
+                    // Hide progress and show results
+                    setTimeout(() => {
+                        $('#upload-progress').addClass('d-none');
+                        showUploadResults(results);
+                        refreshFileList();
+                    }, 500);
+                }
+            }
+        });
+    });
+}
+
+function updateProgress(percentage) {
+    $('.progress-bar').css('width', percentage + '%').attr('aria-valuenow', percentage);
+}
+
+function showUploadResults(results) {
+    const resultsContainer = $('#upload-results');
+    resultsContainer.empty();
+    
+    results.forEach(result => {
+        const alertClass = result.success ? 'alert-success' : 'alert-danger';
+        const icon = result.success ? 'fas fa-check-circle' : 'fas fa-exclamation-triangle';
+        
+        resultsContainer.append(`
+            <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+                <i class="${icon} me-2"></i>${result.message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        `);
+    });
+}
+
+function refreshFileList() {
+    $('#file-list').html(`
+        <div class="text-center py-3">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 mb-0">Loading files...</p>
+        </div>
+    `);
+    
+    $.get('/api/pdfs', function(response) {
+        const fileList = $('#file-list');
+        
+        if (response.success && response.files.length > 0) {
+            let html = '';
+            response.files.forEach(file => {
+                const fileSize = formatFileSize(file.size);
+                const modifiedDate = new Date(file.modified).toLocaleDateString();
+                
+                html += `
+                    <div class="file-item">
+                        <div class="file-info">
+                            <div class="file-name">
+                                <i class="fas fa-file-pdf text-danger me-2"></i>${file.name}
+                            </div>
+                            <div class="file-details">
+                                ${fileSize} • Modified: ${modifiedDate}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            fileList.html(html);
+        } else {
+            fileList.html(`
+                <div class="text-center py-3 text-muted">
+                    <i class="fas fa-inbox fa-2x mb-2"></i>
+                    <p class="mb-0">No PDF files found</p>
+                    <small>Upload some PDFs to get started</small>
+                </div>
+            `);
+        }
+    }).fail(function() {
+        $('#file-list').html(`
+            <div class="text-center py-3 text-danger">
+                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                <p class="mb-0">Failed to load file list</p>
+            </div>
+        `);
+    });
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function reinitializeSystem() {
+    if (confirm('This will reprocess all PDF files and recreate the vector database. This may take several minutes. Continue?')) {
+        $.post('/api/reinitialize', function(response) {
+            if (response.success) {
+                alert('System reinitialized successfully! You can now go back to chat.');
+            } else {
+                alert('Failed to reinitialize system. Check the logs.');
+            }
+        });
+    }
+}
+</script>
+{% endblock %}
